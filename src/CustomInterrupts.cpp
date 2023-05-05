@@ -56,8 +56,8 @@ void attachInterruptCustom( uint8_t pin , uint8_t mode , void (*func)() ) {
     uint8_t oldSREG = SREG;
     cli();
     
-    if ( digitalPinToInterrupt(pin) != NOT_AN_INTERRUPT ) {
-        uint8_t extIntNum = digitalPinToInterrupt( pin );
+    if ( digitalPinToInterruptActual(pin) != NOT_AN_INTERRUPT ) {
+        uint8_t extIntNum = digitalPinToInterruptActual( pin );
         setExtIntRegs( extIntNum , mode );
         extIntStruct[extIntNum].func = func;
         extIntStruct[extIntNum].arg  = nullptr;
@@ -81,8 +81,8 @@ void attachInterruptCustom( uint8_t pin , uint8_t mode , void (*func)(void*) , v
     uint8_t oldSREG = SREG;
     cli();
     
-    if ( digitalPinToInterrupt(pin) != NOT_AN_INTERRUPT ) {
-        uint8_t extIntNum = digitalPinToInterrupt( pin );
+    if ( digitalPinToInterruptActual(pin) != NOT_AN_INTERRUPT ) {
+        uint8_t extIntNum = digitalPinToInterruptActual( pin );
         setExtIntRegs( extIntNum , mode );
         extIntStruct[extIntNum].funcArg = func;
         extIntStruct[extIntNum].arg     = arg;
@@ -106,8 +106,8 @@ void enableInterruptCustom( uint8_t pin ) {
     uint8_t oldSREG = SREG;
     cli();
     
-    if ( digitalPinToInterrupt(pin) != NOT_AN_INTERRUPT ) {
-        switch ( digitalPinToInterrupt(pin) ) {
+    if ( digitalPinToInterruptActual(pin) != NOT_AN_INTERRUPT ) {
+        switch ( digitalPinToInterruptActual(pin) ) {
             case 0: EIMSK |= ( 1<<INT0 ); break;
             case 1: EIMSK |= ( 1<<INT1 ); break;
 #if defined( __AVR_ATmega2560__ )
@@ -135,8 +135,8 @@ void disableInterruptCustom( uint8_t pin ) {
     uint8_t oldSREG = SREG;
     cli();
     
-    if ( digitalPinToInterrupt(pin) != NOT_AN_INTERRUPT ) {
-        switch ( digitalPinToInterrupt(pin) ) {
+    if ( digitalPinToInterruptActual(pin) != NOT_AN_INTERRUPT ) {
+        switch ( digitalPinToInterruptActual(pin) ) {
             case 0: EIMSK &= ~( 1<<INT0 ); break;
             case 1: EIMSK &= ~( 1<<INT1 ); break;
 #if defined( __AVR_ATmega2560__ )
@@ -163,8 +163,8 @@ void disableInterruptCustom( uint8_t pin ) {
 }
 
 bool interruptEnabledCustom( uint8_t pin ) {
-    if ( digitalPinToInterrupt(pin) != NOT_AN_INTERRUPT ) {
-        switch ( digitalPinToInterrupt(pin) ) {
+    if ( digitalPinToInterruptActual(pin) != NOT_AN_INTERRUPT ) {
+        switch ( digitalPinToInterruptActual(pin) ) {
             case 0: return EIMSK & ( 1<<INT0 );
             case 1: return EIMSK & ( 1<<INT1 );
 #if defined( __AVR_ATmega2560__ )
