@@ -15,9 +15,9 @@
 
 #define NO_FUNC 0
 #define NORMAL 1
-#define TRIG 2
+#define EDGE 2
 #define ARG 3
-#define ARG_TRIG 4
+#define ARG_EDGE 4
 
 void attachInterruptCustom( uint8_t pin , uint8_t mode , void (*func)() );
 void attachInterruptCustom( uint8_t pin , uint8_t mode , void (*func)(uint8_t) );
