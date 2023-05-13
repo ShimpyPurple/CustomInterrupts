@@ -13,10 +13,16 @@
 #define digitalPinToInterruptActual(p) digitalPinToInterrupt(p)
 #endif
 
-#define OFF 0
+#define NO_FUNC 0
+#define NORMAL 1
+#define EDGE 2
+#define ARG 3
+#define ARG_EDGE 4
 
 void attachInterruptCustom( uint8_t pin , uint8_t mode , void (*func)() );
+void attachInterruptCustom( uint8_t pin , uint8_t mode , void (*func)(uint8_t) );
 void attachInterruptCustom( uint8_t pin , uint8_t mode , void (*func)(void*) , void *arg );
+void attachInterruptCustom( uint8_t pin , uint8_t mode , void (*func)(void* , uint8_t) , void *arg );
 void enableInterruptCustom( uint8_t pin );
 void disableInterruptCustom( uint8_t pin );
 bool interruptEnabledCustom( uint8_t pin );
