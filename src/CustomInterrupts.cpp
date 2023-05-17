@@ -364,3 +364,72 @@ ISR( INT7_vect ) {
     }
 }
 #endif
+
+struct {
+    void (*func)() = emptyFunc_CustomInterrupts;
+    void (*funcArg)(void*) = emptyFuncArg_CustomInterrupts;
+    uint8_t type = INT_NO_FUNC;
+    void *arg = nullptr;
+    uint32_t trigTime = 0;
+    uint32_t repeat = 0;
+} runAfterIntStruct[ MAX_RUN_AFTERS ];
+
+uint8_t runAfter( uint32_t ms , void (*func)() , uint32_t repeat=0 ) {
+    for ( uint8_t i=0 ; i<MAX_RUN_AFTERS ; ++i ) {
+        if ( runAfterIntStruct[i].type == INT_NO_FUNC ) {
+            runAfterIntStruct[i].func = func;
+            runAfterIntStruct[i].type = INT_NORMAL;
+            runAfterIntStruct[i].trigTime = millis() + ms;
+            runAfterIntStruct[i].repeat = repeat;
+            return i+1;
+        }
+    }
+    return 0;
+}
+
+uint8_t runAfter( uint32_t ms , void (*func)(void*) , void *arg , uint32_t repeat=0 ) {
+    for ( uint8_t i=0 ; i<MAX_RUN_AFTERS ; ++i ) {
+        if ( runAfterIntStruct[i].type == INT_NO_FUNC ) {
+            runAfterIntStruct[i].funcArg = func;
+            runAfterIntStruct[i].arg = arg;
+            runAfterIntStruct[i].type = INT_ARG;
+            runAfterIntStruct[i].trigTime = millis() + ms;
+            runAfterIntStruct[i].repeat = repeat;
+            return i+1;
+        }
+    }
+    return 0;
+}
+
+void runAfterCancel( uint8_t id ) {
+    if ( id == 0 ) return;
+    if ( id > MAX_RUN_AFTERS ) return;
+    runAfterIntStruct[id-1].type = INT_NO_FUNC;
+}
+
+ISR( TIMER0_COMPB_vect ) {
+    for ( uint8_t i=0 ; i<MAX_RUN_AFTERS ; ++i ) {
+        switch ( runAfterIntStruct[i].type ) {
+            case INT_NORMAL:
+                if ( millis() - runAfterIntStruct[i].trigTime <= 1 ) {
+                    if ( runAfterIntStruct[i].repeat > 0 ) {
+                        runAfterIntStruct[i].trigTime = millis() + runAfterIntStruct[i].repeat;
+                    } else {
+                        runAfterIntStruct[i].type = INT_NO_FUNC;
+                    }
+                    runAfterIntStruct[i].func();
+                }
+                break;
+            case INT_ARG:
+                if ( millis() - runAfterIntStruct[i].trigTime <= 1 ) {
+                    if ( runAfterIntStruct[i].repeat > 0 ) {
+                        runAfterIntStruct[i].trigTime = millis() + runAfterIntStruct[i].repeat;
+                    } else {
+                        runAfterIntStruct[i].type = INT_NO_FUNC;
+                    }
+                    runAfterIntStruct[i].funcArg( runAfterIntStruct[i].arg );
+                }
+                break;
+        }
+    }
+}

@@ -19,6 +19,8 @@
 #define INT_ARG 3
 #define INT_ARG_EDGE 4
 
+#define MAX_RUN_AFTERS 10
+
 void attachInterruptCustom( uint8_t pin , uint8_t mode , void (*func)() );
 void attachInterruptCustom( uint8_t pin , uint8_t mode , void (*func)(uint8_t) );
 void attachInterruptCustom( uint8_t pin , uint8_t mode , void (*func)(void*) , void *arg );
@@ -26,5 +28,9 @@ void attachInterruptCustom( uint8_t pin , uint8_t mode , void (*func)(void* , ui
 void enableInterruptCustom( uint8_t pin );
 void disableInterruptCustom( uint8_t pin );
 bool interruptEnabledCustom( uint8_t pin );
+
+uint8_t runAfter( uint32_t ms , void (*func)() , uint32_t repeat=0 );
+uint8_t runAfter( uint32_t ms , void (*func)(void*) , void *arg , uint32_t repeat=0 );
+void runAfterCancel( uint8_t id );
 
 #endif
