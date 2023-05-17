@@ -374,27 +374,27 @@ struct {
     uint32_t repeat = 0;
 } runAfterIntStruct[ MAX_RUN_AFTERS ];
 
-uint8_t runAfter( uint32_t ms , void (*func)() , uint32_t repeat=0 ) {
+uint8_t runAfter( uint32_t ms , void (*func)() , bool repeat=false ) {
     for ( uint8_t i=0 ; i<MAX_RUN_AFTERS ; ++i ) {
         if ( runAfterIntStruct[i].type == INT_NO_FUNC ) {
             runAfterIntStruct[i].func = func;
             runAfterIntStruct[i].type = INT_NORMAL;
             runAfterIntStruct[i].trigTime = millis() + ms;
-            runAfterIntStruct[i].repeat = repeat;
+            runAfterIntStruct[i].repeat = repeat ? ms : 0;
             return i+1;
         }
     }
     return 0;
 }
 
-uint8_t runAfter( uint32_t ms , void (*func)(void*) , void *arg , uint32_t repeat=0 ) {
+uint8_t runAfter( uint32_t ms , void (*func)(void*) , void *arg , bool repeat=false ) {
     for ( uint8_t i=0 ; i<MAX_RUN_AFTERS ; ++i ) {
         if ( runAfterIntStruct[i].type == INT_NO_FUNC ) {
             runAfterIntStruct[i].funcArg = func;
             runAfterIntStruct[i].arg = arg;
             runAfterIntStruct[i].type = INT_ARG;
             runAfterIntStruct[i].trigTime = millis() + ms;
-            runAfterIntStruct[i].repeat = repeat;
+            runAfterIntStruct[i].repeat = repeat ? ms : 0;
             return i+1;
         }
     }

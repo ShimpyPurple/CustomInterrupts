@@ -29,8 +29,8 @@ void enableInterruptCustom( uint8_t pin );
 void disableInterruptCustom( uint8_t pin );
 bool interruptEnabledCustom( uint8_t pin );
 
-uint8_t runAfter( uint32_t ms , void (*func)() , uint32_t repeat=0 );
-uint8_t runAfter( uint32_t ms , void (*func)(void*) , void *arg , uint32_t repeat=0 );
+uint8_t runAfter( uint32_t ms , void (*func)() , bool repeat=false );
+uint8_t runAfter( uint32_t ms , void (*func)(void*) , void *arg , bool repeat=false );
 void runAfterCancel( uint8_t id );
 
 #endif
