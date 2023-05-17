@@ -13,7 +13,7 @@ struct {
     void (*funcEdge)(uint8_t) = emptyFuncEdge_CustomInterrupts;
     void (*funcArg)(void*) = emptyFuncArg_CustomInterrupts;
     void (*funcArgEdge)(void* , uint8_t) = emptyFuncArgEdge_CustomInterrupts;
-    uint8_t type = NO_FUNC;
+    uint8_t type = INT_NO_FUNC;
     void *arg = nullptr;
     volatile bool prev = false;
 } pcIntStruct[3][8];
@@ -24,7 +24,7 @@ struct {
     void (*funcEdge)(uint8_t) = emptyFuncEdge_CustomInterrupts;
     void (*funcArg)(void*) = emptyFuncArg_CustomInterrupts;
     void (*funcArgEdge)(void* , uint8_t) = emptyFuncArgEdge_CustomInterrupts;
-    uint8_t type = NO_FUNC;
+    uint8_t type = INT_NO_FUNC;
     void *arg = nullptr;
 } extIntStruct[
 #if defined( __AVR_ATmega2560__ )
@@ -71,7 +71,7 @@ void attachInterruptCustom( uint8_t pin , uint8_t mode , void (*func)() ) {
         setExtIntRegs( extIntNum , mode );
         extIntStruct[extIntNum].pin  = pin;
         extIntStruct[extIntNum].func = func;
-        extIntStruct[extIntNum].type = NORMAL;
+        extIntStruct[extIntNum].type = INT_NORMAL;
     } else if ( digitalPinToPCICR(pin) != nullptr ) {
         uint8_t PCICRbit = digitalPinToPCICRbit( pin );
         uint8_t *PCMSKn  = digitalPinToPCMSK( pin );
@@ -82,7 +82,7 @@ void attachInterruptCustom( uint8_t pin , uint8_t mode , void (*func)() ) {
         pcIntStruct[PCICRbit][PCMSKbit].mode    = mode;
         pcIntStruct[PCICRbit][PCMSKbit].enabled = true;
         pcIntStruct[PCICRbit][PCMSKbit].func    = func;
-        pcIntStruct[PCICRbit][PCMSKbit].type    = NORMAL;
+        pcIntStruct[PCICRbit][PCMSKbit].type    = INT_NORMAL;
         pcIntStruct[PCICRbit][PCMSKbit].prev    = digitalRead( pin );
     }
     
@@ -98,7 +98,7 @@ void attachInterruptCustom( uint8_t pin , uint8_t mode , void (*func)(uint8_t) )
         setExtIntRegs( extIntNum , mode );
         extIntStruct[extIntNum].pin      = pin;
         extIntStruct[extIntNum].funcEdge = func;
-        extIntStruct[extIntNum].type     = EDGE;
+        extIntStruct[extIntNum].type     = INT_EDGE;
     } else if ( digitalPinToPCICR(pin) != nullptr ) {
         uint8_t PCICRbit = digitalPinToPCICRbit( pin );
         uint8_t *PCMSKn  = digitalPinToPCMSK( pin );
@@ -109,7 +109,7 @@ void attachInterruptCustom( uint8_t pin , uint8_t mode , void (*func)(uint8_t) )
         pcIntStruct[PCICRbit][PCMSKbit].mode     = mode;
         pcIntStruct[PCICRbit][PCMSKbit].enabled  = true;
         pcIntStruct[PCICRbit][PCMSKbit].funcEdge = func;
-        pcIntStruct[PCICRbit][PCMSKbit].type     = EDGE;
+        pcIntStruct[PCICRbit][PCMSKbit].type     = INT_EDGE;
         pcIntStruct[PCICRbit][PCMSKbit].prev     = digitalRead( pin );
     }
     
@@ -125,7 +125,7 @@ void attachInterruptCustom( uint8_t pin , uint8_t mode , void (*func)(void*) , v
         setExtIntRegs( extIntNum , mode );
         extIntStruct[extIntNum].pin     = pin;
         extIntStruct[extIntNum].funcArg = func;
-        extIntStruct[extIntNum].type    = ARG;
+        extIntStruct[extIntNum].type    = INT_ARG;
         extIntStruct[extIntNum].arg     = arg;
     } else if ( digitalPinToPCICR(pin) != nullptr ) {
         uint8_t PCICRbit = digitalPinToPCICRbit( pin );
@@ -137,7 +137,7 @@ void attachInterruptCustom( uint8_t pin , uint8_t mode , void (*func)(void*) , v
         pcIntStruct[PCICRbit][PCMSKbit].mode    = mode;
         pcIntStruct[PCICRbit][PCMSKbit].enabled = true;
         pcIntStruct[PCICRbit][PCMSKbit].funcArg = func;
-        pcIntStruct[PCICRbit][PCMSKbit].type    = ARG;
+        pcIntStruct[PCICRbit][PCMSKbit].type    = INT_ARG;
         pcIntStruct[PCICRbit][PCMSKbit].arg     = arg;
         pcIntStruct[PCICRbit][PCMSKbit].prev    = digitalRead( pin );
     }
@@ -154,7 +154,7 @@ void attachInterruptCustom( uint8_t pin , uint8_t mode , void (*func)(void* , ui
         setExtIntRegs( extIntNum , mode );
         extIntStruct[extIntNum].pin         = pin;
         extIntStruct[extIntNum].funcArgEdge = func;
-        extIntStruct[extIntNum].type        = ARG_EDGE;
+        extIntStruct[extIntNum].type        = INT_ARG_EDGE;
         extIntStruct[extIntNum].arg         = arg;
     } else if ( digitalPinToPCICR(pin) != nullptr ) {
         uint8_t PCICRbit = digitalPinToPCICRbit( pin );
@@ -166,7 +166,7 @@ void attachInterruptCustom( uint8_t pin , uint8_t mode , void (*func)(void* , ui
         pcIntStruct[PCICRbit][PCMSKbit].mode        = mode;
         pcIntStruct[PCICRbit][PCMSKbit].enabled     = true;
         pcIntStruct[PCICRbit][PCMSKbit].funcArgEdge = func;
-        pcIntStruct[PCICRbit][PCMSKbit].type        = ARG_EDGE;
+        pcIntStruct[PCICRbit][PCMSKbit].type        = INT_ARG_EDGE;
         pcIntStruct[PCICRbit][PCMSKbit].arg         = arg;
         pcIntStruct[PCICRbit][PCMSKbit].prev        = digitalRead( pin );
     }
@@ -271,10 +271,10 @@ inline void handlePCInterrupt( uint8_t PCICRbit , uint8_t PCMSKbit ) {
         )
     ) {
         switch ( pcIntStruct[PCICRbit][PCMSKbit].type ) {
-            case NORMAL:   pcIntStruct[PCICRbit][PCMSKbit].func(); break;
-            case EDGE:     pcIntStruct[PCICRbit][PCMSKbit].funcEdge( pinState ? RISING : FALLING ); break; 
-            case ARG:      pcIntStruct[PCICRbit][PCMSKbit].funcArg( pcIntStruct[PCICRbit][PCMSKbit].arg ); break; 
-            case ARG_EDGE: pcIntStruct[PCICRbit][PCMSKbit].funcArgEdge( pcIntStruct[PCICRbit][PCMSKbit].arg , pinState ? RISING : FALLING ); break; 
+            case INT_NORMAL:   pcIntStruct[PCICRbit][PCMSKbit].func(); break;
+            case INT_EDGE:     pcIntStruct[PCICRbit][PCMSKbit].funcEdge( pinState ? RISING : FALLING ); break; 
+            case INT_ARG:      pcIntStruct[PCICRbit][PCMSKbit].funcArg( pcIntStruct[PCICRbit][PCMSKbit].arg ); break; 
+            case INT_ARG_EDGE: pcIntStruct[PCICRbit][PCMSKbit].funcArgEdge( pcIntStruct[PCICRbit][PCMSKbit].arg , pinState ? RISING : FALLING ); break; 
         }
     }
     pcIntStruct[PCICRbit][PCMSKbit].prev = pinState;
@@ -300,67 +300,67 @@ ISR( PCINT2_vect ) {
 
 ISR( INT0_vect ) {
     switch ( extIntStruct[0].type ) {
-        case NORMAL:   extIntStruct[0].func(); break;
-        case EDGE:     extIntStruct[0].funcEdge( digitalRead(extIntStruct[0].pin) ? RISING : FALLING ); break; 
-        case ARG:      extIntStruct[0].funcArg( extIntStruct[0].arg ); break; 
-        case ARG_EDGE: extIntStruct[0].funcArgEdge( extIntStruct[0].arg , digitalRead(extIntStruct[0].pin) ? RISING : FALLING ); break; 
+        case INT_NORMAL:   extIntStruct[0].func(); break;
+        case INT_EDGE:     extIntStruct[0].funcEdge( digitalRead(extIntStruct[0].pin) ? RISING : FALLING ); break; 
+        case INT_ARG:      extIntStruct[0].funcArg( extIntStruct[0].arg ); break; 
+        case INT_ARG_EDGE: extIntStruct[0].funcArgEdge( extIntStruct[0].arg , digitalRead(extIntStruct[0].pin) ? RISING : FALLING ); break; 
     }
 }
 ISR( INT1_vect ) {
     switch ( extIntStruct[1].type ) {
-        case NORMAL:   extIntStruct[1].func(); break;
-        case EDGE:     extIntStruct[1].funcEdge( digitalRead(extIntStruct[1].pin) ? RISING : FALLING ); break; 
-        case ARG:      extIntStruct[1].funcArg( extIntStruct[1].arg ); break; 
-        case ARG_EDGE: extIntStruct[1].funcArgEdge( extIntStruct[1].arg , digitalRead(extIntStruct[1].pin) ? RISING : FALLING ); break; 
+        case INT_NORMAL:   extIntStruct[1].func(); break;
+        case INT_EDGE:     extIntStruct[1].funcEdge( digitalRead(extIntStruct[1].pin) ? RISING : FALLING ); break; 
+        case INT_ARG:      extIntStruct[1].funcArg( extIntStruct[1].arg ); break; 
+        case INT_ARG_EDGE: extIntStruct[1].funcArgEdge( extIntStruct[1].arg , digitalRead(extIntStruct[1].pin) ? RISING : FALLING ); break; 
     }
 }
 #if defined( __AVR_ATmega2560__ )
 ISR( INT2_vect ) {
     switch ( extIntStruct[2].type ) {
-        case NORMAL:   extIntStruct[2].func(); break;
-        case EDGE:     extIntStruct[2].funcEdge( digitalRead(extIntStruct[2].pin) ? RISING : FALLING ); break; 
-        case ARG:      extIntStruct[2].funcArg( extIntStruct[2].arg ); break; 
-        case ARG_EDGE: extIntStruct[2].funcArgEdge( extIntStruct[2].arg , digitalRead(extIntStruct[2].pin) ? RISING : FALLING ); break; 
+        case INT_NORMAL:   extIntStruct[2].func(); break;
+        case INT_EDGE:     extIntStruct[2].funcEdge( digitalRead(extIntStruct[2].pin) ? RISING : FALLING ); break; 
+        case INT_ARG:      extIntStruct[2].funcArg( extIntStruct[2].arg ); break; 
+        case INT_ARG_EDGE: extIntStruct[2].funcArgEdge( extIntStruct[2].arg , digitalRead(extIntStruct[2].pin) ? RISING : FALLING ); break; 
     }
 }
 ISR( INT3_vect ) {
     switch ( extIntStruct[3].type ) {
-        case NORMAL:   extIntStruct[3].func(); break;
-        case EDGE:     extIntStruct[3].funcEdge( digitalRead(extIntStruct[3].pin) ? RISING : FALLING ); break; 
-        case ARG:      extIntStruct[3].funcArg( extIntStruct[3].arg ); break; 
-        case ARG_EDGE: extIntStruct[3].funcArgEdge( extIntStruct[3].arg , digitalRead(extIntStruct[3].pin) ? RISING : FALLING ); break; 
+        case INT_NORMAL:   extIntStruct[3].func(); break;
+        case INT_EDGE:     extIntStruct[3].funcEdge( digitalRead(extIntStruct[3].pin) ? RISING : FALLING ); break; 
+        case INT_ARG:      extIntStruct[3].funcArg( extIntStruct[3].arg ); break; 
+        case INT_ARG_EDGE: extIntStruct[3].funcArgEdge( extIntStruct[3].arg , digitalRead(extIntStruct[3].pin) ? RISING : FALLING ); break; 
     }
 }
 ISR( INT4_vect ) {
     switch ( extIntStruct[4].type ) {
-        case NORMAL:   extIntStruct[4].func(); break;
-        case EDGE:     extIntStruct[4].funcEdge( digitalRead(extIntStruct[4].pin) ? RISING : FALLING ); break; 
-        case ARG:      extIntStruct[4].funcArg( extIntStruct[4].arg ); break; 
-        case ARG_EDGE: extIntStruct[4].funcArgEdge( extIntStruct[4].arg , digitalRead(extIntStruct[4].pin) ? RISING : FALLING ); break; 
+        case INT_NORMAL:   extIntStruct[4].func(); break;
+        case INT_EDGE:     extIntStruct[4].funcEdge( digitalRead(extIntStruct[4].pin) ? RISING : FALLING ); break; 
+        case INT_ARG:      extIntStruct[4].funcArg( extIntStruct[4].arg ); break; 
+        case INT_ARG_EDGE: extIntStruct[4].funcArgEdge( extIntStruct[4].arg , digitalRead(extIntStruct[4].pin) ? RISING : FALLING ); break; 
     }
 }
 ISR( INT5_vect ) {
     switch ( extIntStruct[5].type ) {
-        case NORMAL:   extIntStruct[5].func(); break;
-        case EDGE:     extIntStruct[5].funcEdge( digitalRead(extIntStruct[5].pin) ? RISING : FALLING ); break; 
-        case ARG:      extIntStruct[5].funcArg( extIntStruct[5].arg ); break; 
-        case ARG_EDGE: extIntStruct[5].funcArgEdge( extIntStruct[5].arg , digitalRead(extIntStruct[5].pin) ? RISING : FALLING ); break; 
+        case INT_NORMAL:   extIntStruct[5].func(); break;
+        case INT_EDGE:     extIntStruct[5].funcEdge( digitalRead(extIntStruct[5].pin) ? RISING : FALLING ); break; 
+        case INT_ARG:      extIntStruct[5].funcArg( extIntStruct[5].arg ); break; 
+        case INT_ARG_EDGE: extIntStruct[5].funcArgEdge( extIntStruct[5].arg , digitalRead(extIntStruct[5].pin) ? RISING : FALLING ); break; 
     }
 }
 ISR( INT6_vect ) {
     switch ( extIntStruct[6].type ) {
-        case NORMAL:   extIntStruct[6].func(); break;
-        case EDGE:     extIntStruct[6].funcEdge( digitalRead(extIntStruct[6].pin) ? RISING : FALLING ); break; 
-        case ARG:      extIntStruct[6].funcArg( extIntStruct[6].arg ); break; 
-        case ARG_EDGE: extIntStruct[6].funcArgEdge( extIntStruct[6].arg , digitalRead(extIntStruct[6].pin) ? RISING : FALLING ); break; 
+        case INT_NORMAL:   extIntStruct[6].func(); break;
+        case INT_EDGE:     extIntStruct[6].funcEdge( digitalRead(extIntStruct[6].pin) ? RISING : FALLING ); break; 
+        case INT_ARG:      extIntStruct[6].funcArg( extIntStruct[6].arg ); break; 
+        case INT_ARG_EDGE: extIntStruct[6].funcArgEdge( extIntStruct[6].arg , digitalRead(extIntStruct[6].pin) ? RISING : FALLING ); break; 
     }
 }
 ISR( INT7_vect ) {
     switch ( extIntStruct[7].type ) {
-        case NORMAL:   extIntStruct[7].func(); break;
-        case EDGE:     extIntStruct[7].funcEdge( digitalRead(extIntStruct[7].pin) ? RISING : FALLING ); break; 
-        case ARG:      extIntStruct[7].funcArg( extIntStruct[7].arg ); break; 
-        case ARG_EDGE: extIntStruct[7].funcArgEdge( extIntStruct[7].arg , digitalRead(extIntStruct[7].pin) ? RISING : FALLING ); break; 
+        case INT_NORMAL:   extIntStruct[7].func(); break;
+        case INT_EDGE:     extIntStruct[7].funcEdge( digitalRead(extIntStruct[7].pin) ? RISING : FALLING ); break; 
+        case INT_ARG:      extIntStruct[7].funcArg( extIntStruct[7].arg ); break; 
+        case INT_ARG_EDGE: extIntStruct[7].funcArgEdge( extIntStruct[7].arg , digitalRead(extIntStruct[7].pin) ? RISING : FALLING ); break; 
     }
 }
 #endif
