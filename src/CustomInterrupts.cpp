@@ -368,9 +368,9 @@ ISR( INT7_vect ) {
 struct {
     void (*func)() = emptyFunc_CustomInterrupts;
     void (*funcArg)(void*) = emptyFuncArg_CustomInterrupts;
-    uint8_t type = INT_NO_FUNC;
+    volatile uint8_t type = INT_NO_FUNC;
     void *arg = nullptr;
-    uint32_t trigTime = 0;
+    volatile uint32_t trigTime = 0;
     uint32_t repeat = 0;
 } runAfterIntStruct[ MAX_RUN_AFTERS ];
 
