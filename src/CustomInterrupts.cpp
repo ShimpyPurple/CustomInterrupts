@@ -375,6 +375,7 @@ struct {
 } runAfterIntStruct[ MAX_RUN_AFTERS ];
 
 uint8_t runAfter( uint32_t ms , void (*func)() , bool repeat=false ) {
+    TIMSK0 |= ( 1<<OCIE0B );
     for ( uint8_t i=0 ; i<MAX_RUN_AFTERS ; ++i ) {
         if ( runAfterIntStruct[i].type == INT_NO_FUNC ) {
             runAfterIntStruct[i].func = func;
@@ -388,6 +389,7 @@ uint8_t runAfter( uint32_t ms , void (*func)() , bool repeat=false ) {
 }
 
 uint8_t runAfter( uint32_t ms , void (*func)(void*) , void *arg , bool repeat=false ) {
+    TIMSK0 |= ( 1<<OCIE0B );
     for ( uint8_t i=0 ; i<MAX_RUN_AFTERS ; ++i ) {
         if ( runAfterIntStruct[i].type == INT_NO_FUNC ) {
             runAfterIntStruct[i].funcArg = func;
