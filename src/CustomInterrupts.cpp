@@ -374,21 +374,21 @@ struct {
     uint32_t repeat = 0;
 } runAfterIntStruct[ MAX_RUN_AFTERS ];
 
-uint8_t runAfter( uint32_t ms , void (*func)() , bool repeat=false ) {
+uint8_t runAfter( uint32_t ms , void (*func)() , uint32_t repeat=0 ) {
     TIMSK0 |= ( 1<<OCIE0B );
     for ( uint8_t i=0 ; i<MAX_RUN_AFTERS ; ++i ) {
         if ( runAfterIntStruct[i].type == INT_NO_FUNC ) {
             runAfterIntStruct[i].func = func;
             runAfterIntStruct[i].type = INT_NORMAL;
             runAfterIntStruct[i].trigTime = millis() + ms;
-            runAfterIntStruct[i].repeat = repeat ? ms : 0;
+            runAfterIntStruct[i].repeat = repeat;
             return i+1;
         }
     }
     return 0;
 }
 
-uint8_t runAfter( uint32_t ms , void (*func)(void*) , void *arg , bool repeat=false ) {
+uint8_t runAfter( uint32_t ms , void (*func)(void*) , void *arg , uint32_t repeat=0 ) {
     TIMSK0 |= ( 1<<OCIE0B );
     for ( uint8_t i=0 ; i<MAX_RUN_AFTERS ; ++i ) {
         if ( runAfterIntStruct[i].type == INT_NO_FUNC ) {
@@ -396,7 +396,7 @@ uint8_t runAfter( uint32_t ms , void (*func)(void*) , void *arg , bool repeat=fa
             runAfterIntStruct[i].arg = arg;
             runAfterIntStruct[i].type = INT_ARG;
             runAfterIntStruct[i].trigTime = millis() + ms;
-            runAfterIntStruct[i].repeat = repeat ? ms : 0;
+            runAfterIntStruct[i].repeat = repeat;
             return i+1;
         }
     }
@@ -410,28 +410,29 @@ void runAfterCancel( uint8_t id ) {
 }
 
 ISR( TIMER0_COMPB_vect ) {
+    uint32_t ms = millis();
     for ( uint8_t i=0 ; i<MAX_RUN_AFTERS ; ++i ) {
-        switch ( runAfterIntStruct[i].type ) {
-            case INT_NORMAL:
-                if ( millis() - runAfterIntStruct[i].trigTime <= 1 ) {
-                    if ( runAfterIntStruct[i].repeat > 0 ) {
-                        runAfterIntStruct[i].trigTime = millis() + runAfterIntStruct[i].repeat;
+        if ( runAfterIntStruct[i].type == INT_NO_FUNC ) continue;
+        
+        if ( ms > runAfterIntStruct[i].trigTime ) {
+            switch ( runAfterIntStruct[i].type ) {
+                case INT_NORMAL:
+                    if ( runAfterIntStruct[i].repeat != 0 ) {
+                        runAfterIntStruct[i].trigTime = ms + runAfterIntStruct[i].repeat;
                     } else {
                         runAfterIntStruct[i].type = INT_NO_FUNC;
                     }
                     runAfterIntStruct[i].func();
-                }
-                break;
-            case INT_ARG:
-                if ( millis() - runAfterIntStruct[i].trigTime <= 1 ) {
-                    if ( runAfterIntStruct[i].repeat > 0 ) {
-                        runAfterIntStruct[i].trigTime = millis() + runAfterIntStruct[i].repeat;
+                    break;
+                case INT_ARG:
+                    if ( runAfterIntStruct[i].repeat != 0 ) {
+                        runAfterIntStruct[i].trigTime = ms + runAfterIntStruct[i].repeat;
                     } else {
                         runAfterIntStruct[i].type = INT_NO_FUNC;
                     }
                     runAfterIntStruct[i].funcArg( runAfterIntStruct[i].arg );
-                }
-                break;
+                    break;
+            }
         }
     }
 }
