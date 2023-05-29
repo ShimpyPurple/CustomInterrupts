@@ -1,18 +1,26 @@
 #include "CustomInterrupts.h"
 
-void emptyFunc_CustomInterrupts() {}
-void emptyFuncEdge_CustomInterrupts( uint8_t ) {}
-void emptyFuncArg_CustomInterrupts( void* ) {}
-void emptyFuncArgEdge_CustomInterrupts( void* , uint8_t ) {}
+#define INT_NO_FUNC 0
+#define INT_NORMAL 1
+#define INT_EDGE 2
+#define INT_ARG 3
+#define INT_ARG_EDGE 4
+
+#define MAX_RUN_AFTERS 10
+
+static void emptyFunc() {}
+static void emptyFuncEdge( uint8_t ) {}
+static void emptyFuncArg( void* ) {}
+static void emptyFuncArgEdge( void* , uint8_t ) {}
 
 struct {
     uint8_t pin;
     uint8_t mode;
     bool enabled = false;
-    void (*func)() = emptyFunc_CustomInterrupts;
-    void (*funcEdge)(uint8_t) = emptyFuncEdge_CustomInterrupts;
-    void (*funcArg)(void*) = emptyFuncArg_CustomInterrupts;
-    void (*funcArgEdge)(void* , uint8_t) = emptyFuncArgEdge_CustomInterrupts;
+    void (*func)() = emptyFunc;
+    void (*funcEdge)(uint8_t) = emptyFuncEdge;
+    void (*funcArg)(void*) = emptyFuncArg;
+    void (*funcArgEdge)(void* , uint8_t) = emptyFuncArgEdge;
     uint8_t type = INT_NO_FUNC;
     void *arg = nullptr;
     volatile bool prev = false;
@@ -20,10 +28,10 @@ struct {
 
 struct {
     uint8_t pin;
-    void (*func)() = emptyFunc_CustomInterrupts;
-    void (*funcEdge)(uint8_t) = emptyFuncEdge_CustomInterrupts;
-    void (*funcArg)(void*) = emptyFuncArg_CustomInterrupts;
-    void (*funcArgEdge)(void* , uint8_t) = emptyFuncArgEdge_CustomInterrupts;
+    void (*func)() = emptyFunc;
+    void (*funcEdge)(uint8_t) = emptyFuncEdge;
+    void (*funcArg)(void*) = emptyFuncArg;
+    void (*funcArgEdge)(void* , uint8_t) = emptyFuncArgEdge;
     uint8_t type = INT_NO_FUNC;
     void *arg = nullptr;
 } extIntStruct[
@@ -35,7 +43,7 @@ struct {
 ];
 
 void setExtIntRegs( uint8_t extIntNum , uint8_t mode ) {
-    uint8_t *EICR = nullptr;
+    volatile uint8_t *EICR = nullptr;
     uint8_t ISCn1;
     uint8_t ISCn0;
     
@@ -74,7 +82,7 @@ void attachInterruptCustom( uint8_t pin , uint8_t mode , void (*func)() ) {
         extIntStruct[extIntNum].type = INT_NORMAL;
     } else if ( digitalPinToPCICR(pin) != nullptr ) {
         uint8_t PCICRbit = digitalPinToPCICRbit( pin );
-        uint8_t *PCMSKn  = digitalPinToPCMSK( pin );
+        volatile uint8_t *PCMSKn  = digitalPinToPCMSK( pin );
         uint8_t PCMSKbit = digitalPinToPCMSKbit( pin );
         PCICR   |= ( 1<<PCICRbit );
         *PCMSKn |= ( 1<<PCMSKbit );
@@ -101,7 +109,7 @@ void attachInterruptCustom( uint8_t pin , uint8_t mode , void (*func)(uint8_t) )
         extIntStruct[extIntNum].type     = INT_EDGE;
     } else if ( digitalPinToPCICR(pin) != nullptr ) {
         uint8_t PCICRbit = digitalPinToPCICRbit( pin );
-        uint8_t *PCMSKn  = digitalPinToPCMSK( pin );
+        volatile uint8_t *PCMSKn  = digitalPinToPCMSK( pin );
         uint8_t PCMSKbit = digitalPinToPCMSKbit( pin );
         PCICR   |= ( 1<<PCICRbit );
         *PCMSKn |= ( 1<<PCMSKbit );
@@ -129,7 +137,7 @@ void attachInterruptCustom( uint8_t pin , uint8_t mode , void (*func)(void*) , v
         extIntStruct[extIntNum].arg     = arg;
     } else if ( digitalPinToPCICR(pin) != nullptr ) {
         uint8_t PCICRbit = digitalPinToPCICRbit( pin );
-        uint8_t *PCMSKn  = digitalPinToPCMSK( pin );
+        volatile uint8_t *PCMSKn  = digitalPinToPCMSK( pin );
         uint8_t PCMSKbit = digitalPinToPCMSKbit( pin );
         PCICR   |= ( 1<<PCICRbit );
         *PCMSKn |= ( 1<<PCMSKbit );
@@ -158,7 +166,7 @@ void attachInterruptCustom( uint8_t pin , uint8_t mode , void (*func)(void* , ui
         extIntStruct[extIntNum].arg         = arg;
     } else if ( digitalPinToPCICR(pin) != nullptr ) {
         uint8_t PCICRbit = digitalPinToPCICRbit( pin );
-        uint8_t *PCMSKn  = digitalPinToPCMSK( pin );
+        volatile uint8_t *PCMSKn  = digitalPinToPCMSK( pin );
         uint8_t PCMSKbit = digitalPinToPCMSKbit( pin );
         PCICR   |= ( 1<<PCICRbit );
         *PCMSKn |= ( 1<<PCMSKbit );
@@ -192,7 +200,7 @@ void enableInterruptCustom( uint8_t pin ) {
         default:
             if ( digitalPinToPCICR(pin) != nullptr ) {
                 uint8_t PCICRbit = digitalPinToPCICRbit( pin );
-                uint8_t *PCMSKn  = digitalPinToPCMSK( pin );
+                volatile uint8_t *PCMSKn  = digitalPinToPCMSK( pin );
                 uint8_t PCMSKbit = digitalPinToPCMSKbit( pin );
                 PCICR   |= ( 1<<PCICRbit );
                 *PCMSKn |= ( 1<<PCMSKbit );
@@ -222,7 +230,7 @@ void disableInterruptCustom( uint8_t pin ) {
         default:
             if ( digitalPinToPCICR(pin) != nullptr ) {
                 uint8_t PCICRbit = digitalPinToPCICRbit( pin );
-                uint8_t *PCMSKn  = digitalPinToPCMSK( pin );
+                volatile uint8_t *PCMSKn  = digitalPinToPCMSK( pin );
                 uint8_t PCMSKbit = digitalPinToPCMSKbit( pin );
                 *PCMSKn &= ~( 1<<PCMSKbit );
                 if ( *PCMSKn == 0 ) {
@@ -251,7 +259,6 @@ bool interruptEnabledCustom( uint8_t pin ) {
         default:
             if ( digitalPinToPCICR(pin) != nullptr ) {
                 uint8_t PCICRbit = digitalPinToPCICRbit( pin );
-                uint8_t *PCMSKn  = digitalPinToPCMSK( pin );
                 uint8_t PCMSKbit = digitalPinToPCMSKbit( pin );
                 return pcIntStruct[PCICRbit][PCMSKbit].enabled;
             } else {
@@ -266,8 +273,8 @@ inline void handlePCInterrupt( uint8_t PCICRbit , uint8_t PCMSKbit ) {
     if (
         ( pinState != pcIntStruct[PCICRbit][PCMSKbit].prev ) && (
             ( pcIntStruct[PCICRbit][PCMSKbit].mode == CHANGE  ) ||
-            ( pcIntStruct[PCICRbit][PCMSKbit].mode == FALLING ) && ( !pinState ) ||
-            ( pcIntStruct[PCICRbit][PCMSKbit].mode == RISING  ) && (  pinState )
+            ( (pcIntStruct[PCICRbit][PCMSKbit].mode == FALLING) && !pinState ) ||
+            ( (pcIntStruct[PCICRbit][PCMSKbit].mode == RISING)  &&  pinState )
         )
     ) {
         switch ( pcIntStruct[PCICRbit][PCMSKbit].type ) {
@@ -366,15 +373,15 @@ ISR( INT7_vect ) {
 #endif
 
 struct {
-    void (*func)() = emptyFunc_CustomInterrupts;
-    void (*funcArg)(void*) = emptyFuncArg_CustomInterrupts;
+    void (*func)() = emptyFunc;
+    void (*funcArg)(void*) = emptyFuncArg;
     volatile uint8_t type = INT_NO_FUNC;
     void *arg = nullptr;
     volatile uint32_t trigTime = 0;
     uint32_t repeat = 0;
 } runAfterIntStruct[ MAX_RUN_AFTERS ];
 
-uint8_t runAfter( uint32_t ms , void (*func)() , uint32_t repeat=0 ) {
+uint8_t runAfter( uint32_t ms , void (*func)() , uint32_t repeat ) {
     TIMSK0 |= ( 1<<OCIE0B );
     for ( uint8_t i=0 ; i<MAX_RUN_AFTERS ; ++i ) {
         if ( runAfterIntStruct[i].type == INT_NO_FUNC ) {
@@ -388,7 +395,7 @@ uint8_t runAfter( uint32_t ms , void (*func)() , uint32_t repeat=0 ) {
     return 0;
 }
 
-uint8_t runAfter( uint32_t ms , void (*func)(void*) , void *arg , uint32_t repeat=0 ) {
+uint8_t runAfter( uint32_t ms , void (*func)(void*) , void *arg , uint32_t repeat ) {
     TIMSK0 |= ( 1<<OCIE0B );
     for ( uint8_t i=0 ; i<MAX_RUN_AFTERS ; ++i ) {
         if ( runAfterIntStruct[i].type == INT_NO_FUNC ) {
